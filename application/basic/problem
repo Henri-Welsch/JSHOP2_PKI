@@ -1,2 +1,51 @@
 (defproblem problem basic
-  ((have kiwi)) ((swap banjo kiwi)))
+  (
+	(IN-CITY warehouse1 spandau)
+	(IN-CITY warehouse2 lichtenberg)
+	(IN-CITY warehouse3 pankow)
+	(IN-CITY warehouse4 neukoelln)
+	(IN-CITY warehouse5 neukoelln)
+	
+	(DISTANCE spandau pankow 15)
+	(DISTANCE spandau lichtenberg 26)
+	(DISTANCE spandau neukoelln 25)
+	
+	(TRUCK truck1 14950)
+	(TRUCK truck2 14945)
+	
+	(TRUCK-AT truck1 warehouse1)
+	(TRUCK-AT truck2 warehouse1)
+	
+	(PARCEL-AT parcel1 warehouse1)
+	(PARCEL-AT parcel2 warehouse1)
+	(PARCEL-AT parcel3 warehouse1)
+	(PARCEL-AT parcel4 warehouse1)
+	(PARCEL-AT parcel5 warehouse1)
+	(PARCEL-AT parcel6 warehouse1)
+	(PARCEL-AT parcel7 warehouse1)
+	(PARCEL-AT parcel8 warehouse1)
+		
+	(STAFF-AT fischer warehouse1)
+	(STAFF-AT berger warehouse1)
+	(STAFF-AT schmitz warehouse1)
+	(STAFF-AT meyer warehouse1)
+	(STAFF-AT test warehouse2)
+	
+	(TRUCK-LICENSE berger 67)
+	(TRUCK-LICENSE schmitz 65)
+	(TRUCK-LICENSE meyer 66.5)
+	
+	(KFZ-MECHANIC fischer))
+
+  (
+    ; goal-state
+	(PARCEL-AT parcel1 warehouse2)
+	;(PARCEL-AT parcel2 warehouse4)
+	;(PARCEL-AT parcel3 warehouse2)
+	;(PARCEL-AT parcel4 warehouse2)
+	;(PARCEL-AT parcel5 warehouse2)
+	;(PARCEL-AT parcel6 warehouse4)
+	;(PARCEL-AT parcel7 warehouse3)
+	;(PARCEL-AT parcel8 warehouse4)
+  )
+)
