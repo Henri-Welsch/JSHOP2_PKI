@@ -2,11 +2,226 @@
 ; features of SHOP2.
 
 (defdomain basic (
-  (:operator (!pickup ?a) () () ((have ?a)))
-  (:operator (!drop ?a) ((have ?a)) ((have ?a)) ())
+  
+	(:operator 	(!drive ?truck ?from ?to ?staff) ; head
+				((TRUCK-AT ?truck ?from) (TRUCK-TECHCHECKED ?truck) (TRUCK-FUELED ?truck) (STAFF-AT ?staff ?from)) ; precond
+				((TRUCK-AT ?truck ?from) (TRUCK-TECHCHECKED ?truck) (TRUCK-FUELED ?truck) (STAFF-AT ?staff ?from) (TRUCK-CLEANED ?truck) (TIREPRESSURE-OK ?truck)) ; delete
+				((TRUCK-AT ?truck ?to) (STAFF-AT ?staff ?to)) ; add
+	)
+	
+	(:operator 	(!load-parcel ?parcel ?truck ?location ?staff)	;head
+				((TRUCK-AT ?truck ?location) (PARCEL-AT ?parcel ?location) (STAFF-AT ?staff ?location)) ; precond
+				((PARCEL-AT ?parcel ?location)) ; delete
+				((PARCEL-LOADED ?parcel ?truck)) ; add
+	)
 
-  (:method (swap ?x ?y)
-    ((have ?x) (not (have ?y)))
-    ((!drop ?x) (!pickup ?y))
-    ((have ?y) (not (have ?x)))
-    ((!drop ?y) (!pickup ?x)))))
+	(:operator 	(!unload-parcel ?parcel ?truck ?staff)	;head
+				((TRUCK-AT ?truck ?truck-location) (PARCEL-LOADED ?parcel ?truck) (STAFF-AT ?staff ?truck-location)) ; precond
+				((PARCEL-LOADED ?parcel ?truck)) ; delete
+				((PARCEL-AT ?parcel ?truck-location)) ; add
+	)
+		
+	(:operator 	(!subtractTime ?staff ?hours) ; head
+				((TRUCK-LICENSE ?staff ?hours)) ; precond
+				((TRUCK-LICENSE ?staff ?hours)) ; delete
+				((TRUCK-LICENSE ?staff (call - ?hours 0.5))) ; add
+	)
+	
+	(:operator 	(!increase-mileage ?truck ?distance) ; head
+				((TRUCK ?truck ?mileage)) ; precond
+				((TRUCK ?truck ?mileage)) ; delete
+				((TRUCK ?truck (call + ?mileage ?distance))) ; add
+	)
+	
+	(:operator 	(!refuel ?truck ?staff)
+				()
+				()
+				((TRUCK-FUELED ?truck))
+	)
+	
+	(:operator 	(!techcheck ?truck ?staff)
+				()
+				()
+				((TRUCK-TECHCHECKED ?truck))
+	)
+	
+	(:operator 	(!cleanup ?truck ?staff)
+				()
+				()
+				((TRUCK-CLEANED ?truck))
+	)
+	
+	(:operator 	(!tirePressure-check ?truck ?staff)
+				()
+				()
+				((TIREPRESSURE-OK ?truck))
+	)
+	
+	(:operator 	(!secure-parcel ?parcel)
+				()
+				()
+				((PARCEL-SECURE ?parcel))
+	)
+	
+	(:operator 	(!first-inspection ?truck)
+				()
+				()
+				((first-DONE ?truck))
+	)
+	
+	(:operator 	(!second-inspection ?truck)
+				()
+				()
+				((second-DONE ?truck))
+	)
+	
+	
+	; ------------------------------------------METHODS--------------------------------------------------------------------
+	
+	(:method (subtractDriveTime ?staff)
+		; precond
+		((TRUCK-LICENSE ?staff ?hours)
+		)
+		
+		; subtasks
+		((!subtractTime ?staff ?hours)
+		)
+	)
+	
+	(:method (preDrive-checkup ?truck)
+		; precond
+		((TRUCK-AT ?truck ?location) (STAFF-AT ?staff ?location))
+		
+		; subtasks
+		((!refuel ?truck ?staff)
+		(!techcheck ?truck ?staff)
+		)
+	)
+	
+	(:method (afterDelivery-checkup ?truck ?staff)
+		; precond
+		((TRUCK-AT ?truck ?location) (STAFF-AT ?staff ?location))
+		
+		; subtasks
+		((!refuel ?truck ?staff)
+		(!cleanup ?truck ?staff)
+		(!tirePressure-check ?truck ?staff)
+		)
+	)
+	
+	(:method (increase-mileage ?truck ?from ?to)
+	  ; CASE 1
+		; precond
+		((IN-CITY ?from ?city1) (IN-CITY ?to ?city2) (DISTANCE ?city1 ?city2 ?distance)
+		)
+		
+		; subtasks
+		((!increase-mileage ?truck ?distance)
+		)
+		
+	  ; CASE 2
+		; precond
+		((IN-CITY ?from ?city1) (IN-CITY ?to ?city2) (DISTANCE ?city2 ?city1 ?distance)
+		)
+		
+		; subtasks
+		((!increase-mileage ?truck ?distance)
+		)
+	)
+	
+	(:method (deliver ?parcel ?from ?to ?truck ?driver)
+		; precond
+		((TRUCK-AT ?truck ?from) (TRUCK-TECHCHECKED ?truck) (TRUCK-FUELED ?truck) (STAFF-AT ?driver ?from)
+		)
+		
+		; subtasks
+		((!drive ?truck ?from ?to ?driver)
+		(subtractDriveTime ?driver)
+		
+		(increase-mileage ?truck ?from ?to)
+		(!unload-parcel ?parcel ?truck ?unloaderStaff)
+		(preDrive-checkup ?truck)
+		(!drive ?truck ?to ?from ?driver)
+		(subtractDriveTime ?driver)
+		(increase-mileage ?truck ?from ?to)
+		)
+	)
+	
+	(:method (inspection-needed? ?truck)
+	  ; Case 1 - mileage over 15k
+		; precond
+		((TRUCK-AT ?truck ?location) (KFZ-MECHANIC ?staff) (STAFF-AT ?staff ?location) (TRUCK ?truck ?mileage) (not (first-DONE ?truck))
+		(call >= ?mileage 15000)
+		)
+		
+		; subtasks
+		((!first-inspection ?truck))
+		
+	  ; Case 2 - mileage over 30k
+		; precond
+		((TRUCK-AT ?truck ?location) (KFZ-MECHANIC ?staff) (STAFF-AT ?staff ?location) (TRUCK ?truck ?mileage) (not (second-DONE ?truck))
+		(call >= ?mileage 30000)
+		)
+		
+		; subtasks
+		((!second-inspection ?truck))
+			
+	  ; Case 3 - empty base case (do nothing)
+		()
+		()
+	)
+
+
+	; ---------------------------------------------------------------------------------------------------------------------
+	
+	; main method
+	(:method (PARCEL-AT ?parcel ?location)
+		; precond
+		((PARCEL-AT ?parcel ?current-location)
+		(not (same ?location ?current-location))
+		(TRUCK-AT ?truck ?current-location)
+		;(STAFF-AT ?loaderStaff ?current-location)
+		(TRUCK-LICENSE ?driverStaff ?hours)
+		(STAFF-AT ?driverStaff ?current-location)
+		)
+		
+		; subtasks
+		(
+			; --- choose truck with lowest km count 
+			
+			
+			; --- technical check and refuel
+			(preDrive-checkup ?truck)
+			
+			
+			; --- load parcel to same destination  TODO alle parcel an gleiches ziel laden
+			(!load-parcel ?parcel ?truck ?current-location ?staff)
+			
+			
+			; --- choose staff with truck license and highest hourcount
+			
+			
+			
+			; --- driver checks if every parcel is secure
+
+			
+			
+			; --- driver delivers parcel/s
+			(deliver ?parcel ?current-location ?location ?truck ?driverStaff)
+
+
+			; --- clean, refuel, check tire pressure
+			(afterDelivery-checkup ?truck ?cleanupStaff)
+			
+			
+			; --- check if inspection is needed and do if so
+			(inspection-needed? ?truck)
+		)
+	)
+	
+	
+	
+	
+	(:- (same ?x ?x) nil)
+ )
+)
