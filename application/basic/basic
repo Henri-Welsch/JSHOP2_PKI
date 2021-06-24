@@ -33,6 +33,8 @@
 				((TRUCK ?truck (call + ?mileage ?distance))) ; add
 	)
 	
+	; ------------------------------------------OPERATORS WHICH MAY GET REPLACED------------------------------------------
+	
 	(:operator 	(!refuel ?truck ?staff)
 				()
 				()
@@ -74,7 +76,6 @@
 				()
 				((second-DONE ?truck))
 	)
-	
 	
 	; ------------------------------------------METHODS--------------------------------------------------------------------
 	
@@ -129,23 +130,6 @@
 		)
 	)
 	
-	(:method (deliver ?parcel ?from ?to ?truck ?driver)
-		; precond
-		((TRUCK-AT ?truck ?from) (TRUCK-TECHCHECKED ?truck) (TRUCK-FUELED ?truck) (STAFF-AT ?driver ?from)
-		)
-		
-		; subtasks
-		((!drive ?truck ?from ?to ?driver)
-		(subtractDriveTime ?driver)
-		
-		(increase-mileage ?truck ?from ?to)
-		(!unload-parcel ?parcel ?truck ?unloaderStaff)
-		(preDrive-checkup ?truck)
-		(!drive ?truck ?to ?from ?driver)
-		(subtractDriveTime ?driver)
-		(increase-mileage ?truck ?from ?to)
-		)
-	)
 	
 	(:method (inspection-needed? ?truck)
 	  ; Case 1 - mileage over 15k
@@ -170,43 +154,74 @@
 		()
 		()
 	)
-
-
-	; ---------------------------------------------------------------------------------------------------------------------
 	
-	; main method
-	(:method (PARCEL-AT ?parcel ?location)
+	(:method (secureCargo ) ; TODO
 		; precond
-		((PARCEL-AT ?parcel ?current-location)
-		(not (same ?location ?current-location))
-		(TRUCK-AT ?truck ?current-location)
-		;(STAFF-AT ?loaderStaff ?current-location)
-		(TRUCK-LICENSE ?driverStaff ?hours)
-		(STAFF-AT ?driverStaff ?current-location)
+		(
 		)
 		
 		; subtasks
 		(
-			; --- choose truck with lowest km count 
-			
-			
+		)
+	)
+	
+	(:method (deliver ?parcel ?from ?to ?truck ?driver)
+		; precond
+		((TRUCK-AT ?truck ?from) (TRUCK-TECHCHECKED ?truck) (TRUCK-FUELED ?truck) (STAFF-AT ?driver ?from) (TRUCK-LICENSE ?driver ?hours)
+		)
+		
+		; subtasks
+		((!drive ?truck ?from ?to ?driver) ; driver drives to destination
+		(subtractDriveTime ?driver) ; subtract drive time
+		(increase-mileage ?truck ?from ?to) ; increase mileage on truck
+		(!unload-parcel ?parcel ?truck ?unloaderStaff) ; unload cargo by staff at destination TODO for all loaded parcels
+		(preDrive-checkup ?truck) ; check the truck
+		(!drive ?truck ?to ?from ?driver) ; driver drives back
+		(subtractDriveTime ?driver) ; subtract drive time
+		(increase-mileage ?truck ?from ?to) ; increase mileage on truck
+		)
+	)
+
+	; --------------------------------------------main method-------------------------------------------------------------------------
+	
+	(:method (PARCEL-AT ?parcel ?location)
+		; precond
+		(:sort-by ?mileage < ( ; choose truck with lowest km count 
+		(PARCEL-AT ?parcel ?current-location)
+		(not (same ?location ?current-location))
+		(TRUCK-AT ?truck ?current-location)
+		(TRUCK ?truck ?mileage)
+		))
+		
+		; subtasks
+		((select-driver ?parcel ?location ?current-location ?truck)
+		)
+	)
+	
+	
+	(:method (select-driver ?parcel ?location ?current-location ?truck)
+		; precond
+		(:sort-by ?hours > ( ; choose driver with most hours left
+		(TRUCK-AT ?truck ?current-location)
+		(STAFF-AT ?driverStaff ?current-location)
+		(TRUCK-LICENSE ?driverStaff ?hours)
+		(STAFF-AT ?cleanupStaff ?current-location)
+		))
+		
+		; subtasks
+		(
 			; --- technical check and refuel
 			(preDrive-checkup ?truck)
 			
-			
-			; --- load parcel to same destination  TODO alle parcel an gleiches ziel laden
+			; --- load parcel to same destination  TODO alle parcel zum gleichen ziel laden
 			(!load-parcel ?parcel ?truck ?current-location ?staff)
 			
 			
-			; --- choose staff with truck license and highest hourcount
+			; --- secure cargo
+			(secureCargo) ; TODO
 			
 			
-			
-			; --- driver checks if every parcel is secure
-
-			
-			
-			; --- driver delivers parcel/s
+			; --- choose staff with truck license and highest hourcount to be driver and send him delivering parcel/s
 			(deliver ?parcel ?current-location ?location ?truck ?driverStaff)
 
 

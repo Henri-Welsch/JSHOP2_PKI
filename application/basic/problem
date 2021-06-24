@@ -29,7 +29,6 @@
 	(STAFF-AT berger warehouse1)
 	(STAFF-AT schmitz warehouse1)
 	(STAFF-AT meyer warehouse1)
-	(STAFF-AT test warehouse2)
 	
 	(TRUCK-LICENSE berger 67)
 	(TRUCK-LICENSE schmitz 65)
