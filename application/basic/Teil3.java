@@ -1,7 +1,12 @@
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -113,10 +118,11 @@ public class Teil3 {
 
     private static void getManager(String manager) {
         AtomicInteger counter = new AtomicInteger(0);
+        AtomicInteger nrCounter = new AtomicInteger(1);
         JFrame newFrame = new JFrame(manager);
 
-        JPanel vPanel=new JPanel();
-        vPanel.setLayout(null);
+        JPanel vPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        
 
         try (FileReader fileReader = new FileReader("application/basic/problem")) {
             BufferedReader reader = new BufferedReader(fileReader);
@@ -125,18 +131,33 @@ public class Teil3 {
                 .map(str -> str.replace("(", "")).map(str -> str.replace(")", ""))
                 .map(str -> str.split(" ")).filter(str -> str[0].equals(manager))
                 .forEach(str -> {
-        
+                    JPanel hPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+                    hPanel.add(Box.createRigidArea(new Dimension(2, 0)));
+                    
+                    JLabel x = new JLabel("Nr: " + nrCounter.getAndIncrement()); 
+                    x.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                    x.setPreferredSize(new Dimension(40, 20));
+
+
                     JLabel a = new JLabel(str[1]); 
-                    System.out.println(a.getText());
-                    a.setBounds(10,counter.get(),150,25);
+                    a.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                    a.setPreferredSize(new Dimension(90, 20));
 
                     JTextField b = new JTextField(str[2]);
-                    b.setBounds(170,counter.get(),150,25);
+                    b.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                    b.setPreferredSize(new Dimension(100, 20));
 
+                    JButton c = new JButton("Löschen");
+                    c.setPreferredSize(new Dimension(90, 20));
+                    hPanel.add(Box.createRigidArea(new Dimension(2, 0)));
                     counter.set(counter.get()+20);
-            
-                    vPanel.add(a);
-                    vPanel.add(b);
+                    
+                    hPanel.add(x);
+                    hPanel.add(a);
+                    hPanel.add(b);
+                    hPanel.add(Box.createRigidArea(new Dimension(5, 0)));
+                    hPanel.add(c);
+                    vPanel.add(hPanel);
                 });
             
         } catch (Exception e) {System.out.println(e.getMessage());}
