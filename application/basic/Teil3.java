@@ -1,20 +1,12 @@
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.*;  
+import javax.swing.*;  
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 
 public class Teil3 {
     public static void main(String[] args) {    
@@ -61,6 +53,7 @@ public class Teil3 {
         truck_Button.addActionListener(e -> {
             getManager(data.get("TRUCK"), "TRUCK");
             System.out.println("Open truck manager");
+            // TODO 
         });
         // * Ende Stand des Kilometerzählers 
 
@@ -77,6 +70,7 @@ public class Teil3 {
         driver_Button.addActionListener(e -> {
             getManager(data.get("TRUCK-LICENSE"),"TRUCK-LICENSE");
             System.out.println("Open driver manager");
+            // TODO 
         });
         // * Ende Stand des Stundenkontos. 
 
@@ -93,6 +87,7 @@ public class Teil3 {
         hall_Button.addActionListener(e -> {
             getManager(data.get("IN-CITY"), "IN-CITY");
             System.out.println("Open hall manager");
+            // TODO 
         });
         // * Ende Hallen 
 
@@ -105,6 +100,7 @@ public class Teil3 {
 
         start_Button.addActionListener(e -> {
             System.out.println("Start");
+            // TODO 
         });
 
 
@@ -114,6 +110,7 @@ public class Teil3 {
 
         cancel_Button.addActionListener(e -> {
             System.out.println("Cancel");
+            // TODO 
         });
         // * Ende Input Button
     }
@@ -122,15 +119,20 @@ public class Teil3 {
         AtomicInteger nrCounter = new AtomicInteger(1);
         JFrame newFrame = new JFrame(manager);
 
+        
         JPanel vPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         vPanel.setPreferredSize(new Dimension(1,data.size()*20));
         JScrollPane scrollPane = new JScrollPane(vPanel);
 
-        
+
+
+
+
         data.entrySet().stream().forEach(str -> {
             JPanel hPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
             hPanel.add(Box.createRigidArea(new Dimension(2, 0)));
-        
+
+
             JLabel x = new JLabel("Nr: " + nrCounter.getAndIncrement()); 
             x.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             x.setPreferredSize(new Dimension(40, 20));
@@ -147,6 +149,15 @@ public class Teil3 {
             JButton c = new JButton("Löschen");
             c.setPreferredSize(new Dimension(90, 20));
             hPanel.add(Box.createRigidArea(new Dimension(2, 0)));
+
+            c.addActionListener(e -> {
+                vPanel.remove(hPanel);
+                vPanel.revalidate();
+                vPanel.repaint();
+                data.remove(str.getKey());
+                vPanel.setPreferredSize(new Dimension(1,data.size()*20));
+                // TODO call Writer
+            });
             
             hPanel.add(x);
             hPanel.add(a);
