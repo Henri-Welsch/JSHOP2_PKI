@@ -13,10 +13,10 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
-public class test {
-    
+public class Teil3 {
     public static void main(String[] args) {    
         JFrame frame = new JFrame("Eingabe");
         
@@ -123,8 +123,10 @@ public class test {
         JFrame newFrame = new JFrame(manager);
 
         JPanel vPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        
+        vPanel.setPreferredSize(new Dimension(1,data.size()*20));
+        JScrollPane scrollPane = new JScrollPane(vPanel);
 
+        
         data.entrySet().stream().forEach(str -> {
             JPanel hPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
             hPanel.add(Box.createRigidArea(new Dimension(2, 0)));
@@ -154,10 +156,9 @@ public class test {
             vPanel.add(hPanel);
         });
 
-            
-        newFrame.add(vPanel);
+        System.out.println(data.size()*20);
+        newFrame.add(scrollPane);
         newFrame.setSize(350, 270);
-        //newFrame.pack();          // Important for later
         newFrame.setVisible(true);
     }
 
