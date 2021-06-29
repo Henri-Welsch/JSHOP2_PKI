@@ -1,5 +1,5 @@
 import java.awt.*;  
-import javax.swing.*;  
+import javax.swing.*;
 
 import java.util.function.Function;
 import java.io.BufferedReader;
@@ -26,7 +26,7 @@ public class Teil3 {
 
 
     private static void placeComponents(JPanel panel) {
-        Map<String, Map<String, String>> data = readDate();
+        Map<String, Map<String, String>> entries = readDate();
         panel.setLayout(null);
 
         
@@ -44,7 +44,7 @@ public class Teil3 {
 
 
         // * Start Stand des Kilometerzählers 
-        JLabel truck_Label = new JLabel("Anzahl Trucks " + data.get("TRUCK").size());
+        JLabel truck_Label = new JLabel("Anzahl Trucks " + entries.get("TRUCK").size());
         truck_Label.setBounds(10,70,150,25);
         panel.add(truck_Label);
 
@@ -53,14 +53,14 @@ public class Teil3 {
         panel.add(truck_Button);
 
         truck_Button.addActionListener(e -> {
-            getManager(data.get("TRUCK"), "TRUCK");
+            getManager(entries.get("TRUCK"), "TRUCK");
             System.out.println("Open truck manager");
         });
         // * Ende Stand des Kilometerzählers 
 
 
         // * Start Stand des Stundenkontos. 
-        JLabel driver_Label = new JLabel("Anzahl Fahrer " + data.get("TRUCK-LICENSE").size());
+        JLabel driver_Label = new JLabel("Anzahl Fahrer " + entries.get("TRUCK-LICENSE").size());
         driver_Label.setBounds(10,100,150,25);
         panel.add(driver_Label);
 
@@ -69,14 +69,14 @@ public class Teil3 {
         panel.add(driver_Button);
 
         driver_Button.addActionListener(e -> {
-            getManager(data.get("TRUCK-LICENSE"),"TRUCK-LICENSE");
+            getManager(entries.get("TRUCK-LICENSE"),"TRUCK-LICENSE");
             System.out.println("Open driver manager");
         });
         // * Ende Stand des Stundenkontos. 
 
 
         // * Start Hallen
-        JLabel hall_Label = new JLabel("Anzahl Hallen " + data.get("IN-CITY").size());
+        JLabel hall_Label = new JLabel("Anzahl Hallen " + entries.get("IN-CITY").size());
         hall_Label.setBounds(10,130,150,25);
         panel.add(hall_Label);
 
@@ -85,7 +85,7 @@ public class Teil3 {
         panel.add(hall_Button);
 
         hall_Button.addActionListener(e -> {
-            getManager(data.get("IN-CITY"), "IN-CITY");
+            getManager(entries.get("IN-CITY"), "IN-CITY");
             System.out.println("Open hall manager");
         });
         // * Ende Hallen 
@@ -116,34 +116,40 @@ public class Teil3 {
 
 
 
-    private static void getManager(Map<String, String> data, String manager) {
+    private static void getManager(Map<String, String> entries, String manager) {
         JFrame newFrame = new JFrame(manager);
 
 
+        JPanel mainPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 1, 0));
+        mainPanel.setPreferredSize(new Dimension(1,(entries.size()*20)));
 
-        JPanel vPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        vPanel.setPreferredSize(vPanel.getPreferredSize());
-        int weight = data.size()*20;
-        vPanel.setPreferredSize(new Dimension(1,weight));
-
-        JScrollPane scrollPane = new JScrollPane(vPanel);
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
         
 
-
         Function <Map.Entry<String, String>, JPanel> foo = new Function<Map.Entry<String, String>, JPanel>(){
-            int counter = 1;
+            private int counter = 1;
 
             @Override
             public JPanel apply(Entry<String, String> t) {
-                return getEntry(t, counter++);
+                JPanel subPanel = getSubPanel(t, counter++);
+                JButton button = (JButton)subPanel.getComponent(5);
+
+                button.addActionListener(e -> {                                         // Set remove event listener
+                    counter--;                                                          // decrease count of elements
+                    entries.remove(((JTextField)subPanel.getComponent(2)).getText());   // Remove from Map
+                    mainPanel.remove(subPanel);                                         // Remove from Panel
+                    mainPanel.revalidate();                                             // Redo Panel
+                    mainPanel.repaint();                                                // Redo Panel
+                    mainPanel.setPreferredSize(new Dimension(1,counter*20));            // Grow with ScrollPane
+                });
+                return subPanel;
             }
         };
-        
 
 
-        data.entrySet().stream().map(foo::apply).forEach(vPanel::add);
+        entries.entrySet().stream().map(foo::apply).forEach(mainPanel::add);
 
 
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
@@ -153,11 +159,12 @@ public class Teil3 {
         hinzufuegen.setPreferredSize(new Dimension(165, 26));
         hinzufuegen.addActionListener(lamdbda -> {
             System.out.println("Eintrag hinzufügen");
-            vPanel.add(foo.apply(null));
-            vPanel.revalidate();
-            vPanel.repaint();
-            // TODO ScrollPane is not growing
-            // TODO Cant delete enty
+            mainPanel.add(foo.apply(null));                             // Append new empty entry
+            mainPanel.revalidate();                                     // Redo Panel
+            mainPanel.repaint();                                        // Redo Panel
+
+            int count = mainPanel.getComponentCount() *20;              // Grow with ScrollPane
+            mainPanel.setPreferredSize(new Dimension(1,count));         // Grow with ScrollPane
             // TODO Cant Save Entry or changes
         });
 
@@ -184,7 +191,7 @@ public class Teil3 {
 
     
     private static Map<String, Map<String, String>> readDate() {
-        Map<String, Map<String, String>> data = new HashMap<>();
+        Map<String, Map<String, String>> entries = new HashMap<>();
 
         try (FileReader fileReader = new FileReader("application/basic/problem")) {
             BufferedReader reader = new BufferedReader(fileReader);
@@ -193,59 +200,47 @@ public class Teil3 {
                 .map(str -> str.replace("(", "")).map(str -> str.replace(")", ""))
                 .map(str -> str.split(" ")).forEach(str -> {
                         try {
-                            if (data.get(str[0]) == null) 
-                                data.put(str[0], new HashMap<>());
-                            if (data.get(str[0]).get(str[1]) == null)
-                                data.get(str[0]).put(str[1], str[2]);
+                            if (entries.get(str[0]) == null) 
+                                entries.put(str[0], new HashMap<>());
+                            if (entries.get(str[0]).get(str[1]) == null)
+                                entries.get(str[0]).put(str[1], str[2]);
                         } catch (Exception e) {}
                     });
         } catch (Exception e) { System.out.println(e); }
-        // data.entrySet().stream().forEach(x -> x.getValue().entrySet().stream().forEach(y -> System.out.println(x.getKey() + " " + y.getKey() + " " + y.getValue())));
-        return data;
+        return entries;
     }
 
 
 
-    private static JPanel getEntry(Map.Entry<String, String> str, Integer counter) {
-        JPanel hPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-            hPanel.add(Box.createRigidArea(new Dimension(2, 0)));
+    private static JPanel getSubPanel(Map.Entry<String, String> entry, Integer counter) {
+        JPanel subPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        subPanel.add(Box.createRigidArea(new Dimension(4, 0)));
 
-            String key = (str == null)? "" : str.getKey();
-            String value = (str == null)? "" : str.getValue();
-
-            JLabel x = new JLabel("Nr: " + counter); 
-            x.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            x.setPreferredSize(new Dimension(40, 20));
+        String key = (entry == null)? "" : entry.getKey();
+        String value = (entry == null)? "" : entry.getValue();
 
 
-            JTextField a = new JTextField(key); 
-            a.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            a.setPreferredSize(new Dimension(90, 20));
+        JLabel entryNr = new JLabel("Nr: " + counter); 
+        entryNr.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        entryNr.setPreferredSize(new Dimension(40, 20));
+        subPanel.add(entryNr);
 
-            JTextField b = new JTextField(value);
-            b.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            b.setPreferredSize(new Dimension(100, 20));
+        JTextField entryKey = new JTextField(key); 
+        entryKey.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        entryKey.setPreferredSize(new Dimension(90, 20));
+        subPanel.add(entryKey);
 
-            JButton c = new JButton("Löschen");
-            c.setPreferredSize(new Dimension(95, 20));
-            hPanel.add(Box.createRigidArea(new Dimension(2, 0)));
+        JTextField entryValue = new JTextField(value);
+        entryValue.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        entryValue.setPreferredSize(new Dimension(100, 20));
+        subPanel.add(entryValue);
 
-            // TODO Funktionalität von Löschen ist nicht mehr vorhanden
-            // TODO Funktionalität von Löschen muss wieder hergestellt werden
-            /*
-            c.addActionListener(e -> {
-                panel.remove(hPanel);
-                panel.revalidate();
-                panel.repaint();
-                data.remove(str.getKey());
-                vPanel.setPreferredSize(new Dimension(1,data.size()*20));
-                // TODO call Writer
-            });
-            */
+        subPanel.add(Box.createRigidArea(new Dimension(5, 0)));
 
-            hPanel.add(x); hPanel.add(a); hPanel.add(b);
-            hPanel.add(Box.createRigidArea(new Dimension(5, 0)));
-            hPanel.add(c);
-            return hPanel;
+        JButton delButton = new JButton("Löschen");
+        delButton.setPreferredSize(new Dimension(95, 20));
+        subPanel.add(delButton);
+
+        return subPanel;
     }
 }
