@@ -1,6 +1,7 @@
 import java.awt.*;  
 import javax.swing.*;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -26,7 +27,7 @@ public class Teil3 {
 
 
     private static void placeComponents(JPanel panel) {
-        Map<String, Map<String, String>> entries = readDate();
+        Map<String, Map<JTextField, JTextField>> entries = readDate();
         panel.setLayout(null);
 
         
@@ -35,9 +36,14 @@ public class Teil3 {
         deliveryOrder_Label.setBounds(10,20,150,25);
         panel.add(deliveryOrder_Label);
 
-        JTextField deliveryOrder_Text = new JTextField(20);
-        deliveryOrder_Text.setBounds(170,20,150,25);
-        panel.add(deliveryOrder_Text);
+        JButton deliveryOrder_Button = new JButton("Öffne Manager");
+        deliveryOrder_Button.setBounds(170,20,150,25);
+        panel.add(deliveryOrder_Button);
+
+        deliveryOrder_Button.addActionListener(e -> {
+            getManager(entries.get("PARCEL-AT"), "PARCEL-AT");
+            System.out.println("Open lieferaufträge manager");
+        });
         // TODO noch nicht klar -> Lese Aufgabenstellung
         // * Ende Lieferaufträge
 
@@ -45,6 +51,7 @@ public class Teil3 {
 
         // * Start Stand des Kilometerzählers 
         JLabel truck_Label = new JLabel("Anzahl Trucks " + entries.get("TRUCK").size());
+        // TODO counter not working
         truck_Label.setBounds(10,70,150,25);
         panel.add(truck_Label);
 
@@ -55,12 +62,14 @@ public class Teil3 {
         truck_Button.addActionListener(e -> {
             getManager(entries.get("TRUCK"), "TRUCK");
             System.out.println("Open truck manager");
+
         });
         // * Ende Stand des Kilometerzählers 
 
 
         // * Start Stand des Stundenkontos. 
         JLabel driver_Label = new JLabel("Anzahl Fahrer " + entries.get("TRUCK-LICENSE").size());
+        // TODO counter not working
         driver_Label.setBounds(10,100,150,25);
         panel.add(driver_Label);
 
@@ -71,12 +80,14 @@ public class Teil3 {
         driver_Button.addActionListener(e -> {
             getManager(entries.get("TRUCK-LICENSE"),"TRUCK-LICENSE");
             System.out.println("Open driver manager");
+
         });
         // * Ende Stand des Stundenkontos. 
 
 
         // * Start Hallen
         JLabel hall_Label = new JLabel("Anzahl Hallen " + entries.get("IN-CITY").size());
+        // TODO counter not working
         hall_Label.setBounds(10,130,150,25);
         panel.add(hall_Label);
 
@@ -116,7 +127,7 @@ public class Teil3 {
 
 
 
-    private static void getManager(Map<String, String> entries, String manager) {
+    private static void getManager(Map<JTextField, JTextField> entries, String manager) {
         JFrame newFrame = new JFrame(manager);
 
 
@@ -128,20 +139,21 @@ public class Teil3 {
 
         
 
-        Function <Map.Entry<String, String>, JPanel> foo = new Function<Map.Entry<String, String>, JPanel>(){
+        Function <Map.Entry<JTextField, JTextField>, JPanel> foo = new Function<Map.Entry<JTextField, JTextField>, JPanel>() {
             private int counter = 1;
 
             @Override
-            public JPanel apply(Entry<String, String> t) {
+            public JPanel apply(Entry<JTextField, JTextField> t) {
                 JPanel subPanel = getSubPanel(t, counter++);
                 JButton button = (JButton)subPanel.getComponent(5);
 
                 button.addActionListener(e -> {                                         // Set remove event listener
                     counter--;                                                          // decrease count of elements
-                    entries.remove(((JTextField)subPanel.getComponent(2)).getText());   // Remove from Map
+                    entries.remove((subPanel.getComponent(2)));                         // Remove from Map
                     mainPanel.remove(subPanel);                                         // Remove from Panel
                     mainPanel.revalidate();                                             // Redo Panel
                     mainPanel.repaint();                                                // Redo Panel
+                    System.out.println(counter*20);
                     mainPanel.setPreferredSize(new Dimension(1,counter*20));            // Grow with ScrollPane
                 });
                 return subPanel;
@@ -156,68 +168,63 @@ public class Teil3 {
         topPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         
         JButton hinzufuegen = new JButton("Eintrag hinzufügen");
-        hinzufuegen.setPreferredSize(new Dimension(165, 26));
+        hinzufuegen.setPreferredSize(new Dimension(330, 26));
         hinzufuegen.addActionListener(lamdbda -> {
             System.out.println("Eintrag hinzufügen");
-            mainPanel.add(foo.apply(null));                             // Append new empty entry
+            JPanel newEntry = foo.apply(null);
+            JTextField key = (JTextField) newEntry.getComponent(2);
+            JTextField value = (JTextField) newEntry.getComponent(3);
+            
+            entries.put(key, value);
+            mainPanel.add(newEntry);                                    // Append new empty entry
             mainPanel.revalidate();                                     // Redo Panel
             mainPanel.repaint();                                        // Redo Panel
 
             int count = mainPanel.getComponentCount() *20;              // Grow with ScrollPane
             mainPanel.setPreferredSize(new Dimension(1,count));         // Grow with ScrollPane
-            // TODO Cant Save Entry or changes
         });
 
-
-        JButton speichern = new JButton("Speichern");
-        speichern.setPreferredSize(new Dimension(165, 26));
-        speichern.addActionListener(lambda -> {
-            System.out.println("Speichern");
-            // TODO Speichern von elementen in der Map
-            // TODO Speichern von elementen in der Problem Datei
-        });
         
-
-        topPanel.add(speichern);
         topPanel.add(hinzufuegen);
 
         newFrame.add(topPanel, BorderLayout.NORTH);
-    
-        
         newFrame.add(scrollPane, BorderLayout.CENTER);
+
         newFrame.setSize(350, 270);
         newFrame.setVisible(true);
     }
 
     
-    private static Map<String, Map<String, String>> readDate() {
-        Map<String, Map<String, String>> entries = new HashMap<>();
+    private static Map<String, Map<JTextField, JTextField>> readDate() {
+        Map<String, Map<JTextField, JTextField>> entries = new HashMap<>();
 
         try (FileReader fileReader = new FileReader("application/basic/problem")) {
-            BufferedReader reader = new BufferedReader(fileReader);
-
-            reader.lines().filter(str -> !str.isBlank()).map(String::trim)
-                .map(str -> str.replace("(", "")).map(str -> str.replace(")", ""))
-                .map(str -> str.split(" ")).forEach(str -> {
-                        try {
-                            if (entries.get(str[0]) == null) 
-                                entries.put(str[0], new HashMap<>());
-                            if (entries.get(str[0]).get(str[1]) == null)
-                                entries.get(str[0]).put(str[1], str[2]);
-                        } catch (Exception e) {}
-                    });
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            
+            /********* Funktional Interface -> Consumer *********/
+            Consumer<String> line = str -> {
+                String arr[] = str.replace("(", "").replace(")", "").trim().split(" ");
+                if (arr.length < 3) return;
+                if (entries.get(arr[0]) == null) 
+                    entries.put(arr[0], new HashMap<>());
+                entries.get(arr[0]).put(new JTextField(arr[1]), new JTextField(arr[2]));
+            };
+            
+            /********* Main Stream that goes over the data *********/
+            bufferedReader.lines().forEach(line::accept);
         } catch (Exception e) { System.out.println(e); }
+
         return entries;
     }
 
 
 
-    private static JPanel getSubPanel(Map.Entry<String, String> entry, Integer counter) {
+    private static JPanel getSubPanel(Map.Entry<JTextField, JTextField> entry, Integer counter) {
         JPanel subPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         subPanel.add(Box.createRigidArea(new Dimension(4, 0)));
 
-        String key = (entry == null)? "" : entry.getKey();
-        String value = (entry == null)? "" : entry.getValue();
+        JTextField key = (entry == null)? null : entry.getKey();
+        JTextField value = (entry == null)? null : entry.getValue();
 
 
         JLabel entryNr = new JLabel("Nr: " + counter); 
@@ -225,12 +232,12 @@ public class Teil3 {
         entryNr.setPreferredSize(new Dimension(40, 20));
         subPanel.add(entryNr);
 
-        JTextField entryKey = new JTextField(key); 
+        JTextField entryKey = (key == null)? new JTextField() : key;
         entryKey.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         entryKey.setPreferredSize(new Dimension(90, 20));
         subPanel.add(entryKey);
 
-        JTextField entryValue = new JTextField(value);
+        JTextField entryValue = (value == null)? new JTextField() : value;
         entryValue.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         entryValue.setPreferredSize(new Dimension(100, 20));
         subPanel.add(entryValue);
