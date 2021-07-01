@@ -1,13 +1,13 @@
-import java.awt.*;  
+import java.awt.*;
 import javax.swing.*;
+import java.io.*;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 public class Teil3 {
@@ -15,7 +15,7 @@ public class Teil3 {
         JFrame frame = new JFrame("Eingabe");
         
 
-        frame.setSize(350, 270);
+        frame.setSize(350, 285);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel panel = new JPanel();    
@@ -102,25 +102,44 @@ public class Teil3 {
         // * Ende Hallen 
 
 
-
         // * Start Input Button
-        JButton start_Button = new JButton("Ausführen");
-        start_Button.setBounds(10, 185, 150, 25);
-        panel.add(start_Button);
+        JButton save_Button = new JButton("Speichern");
+        save_Button.setBounds(10, 185, 150, 25);
+        panel.add(save_Button);
 
-        start_Button.addActionListener(e -> {
-            System.out.println("Start");
-            // TODO Aufrufen von Basic
+        save_Button.addActionListener(e -> {
+            System.out.println("Speichern");
+            writeData(entries);
         });
 
 
-        JButton cancel_Button = new JButton("Abbruch");
+        JButton cancel_Button = new JButton("Verwerfen");
         cancel_Button.setBounds(170, 185, 150, 25);
         panel.add(cancel_Button);
 
         cancel_Button.addActionListener(e -> {
-            System.out.println("Cancel");
-            // TODO 
+            System.out.println("Verwerfen");
+            // TODO Verwerfen der Änderungen 
+        });
+
+        // * Start Input Button
+        JButton start_Button = new JButton("Ausführen");
+        start_Button.setBounds(10, 215, 150, 25);
+        panel.add(start_Button);
+
+        start_Button.addActionListener(e -> {
+            System.out.println("Ausführen");
+            // TODO Aufrufen von Basic
+        });
+
+
+        JButton stop_Button = new JButton("Abbrechen");
+        stop_Button.setBounds(170, 215, 150, 25);
+        panel.add(stop_Button);
+
+        stop_Button.addActionListener(e -> {
+            System.out.println("Abbrechen");
+            // TODO Abbrechen von Basic
         });
         // * Ende Input Button
     }
@@ -190,34 +209,9 @@ public class Teil3 {
         newFrame.add(topPanel, BorderLayout.NORTH);
         newFrame.add(scrollPane, BorderLayout.CENTER);
 
-        newFrame.setSize(350, 270);
+        newFrame.setSize(350, 285);
         newFrame.setVisible(true);
     }
-
-    
-    private static Map<String, Map<JTextField, JTextField>> readDate() {
-        Map<String, Map<JTextField, JTextField>> entries = new HashMap<>();
-
-        try (FileReader fileReader = new FileReader("application/basic/problem")) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            
-            /********* Funktional Interface -> Consumer *********/
-            Consumer<String> line = str -> {
-                String arr[] = str.replace("(", "").replace(")", "").trim().split(" ");
-                if (arr.length < 3) return;
-                if (entries.get(arr[0]) == null) 
-                    entries.put(arr[0], new HashMap<>());
-                entries.get(arr[0]).put(new JTextField(arr[1]), new JTextField(arr[2]));
-            };
-            
-            /********* Main Stream that goes over the data *********/
-            bufferedReader.lines().forEach(line::accept);
-        } catch (Exception e) { System.out.println(e); }
-
-        return entries;
-    }
-
-
 
     private static JPanel getSubPanel(Map.Entry<JTextField, JTextField> entry, Integer counter) {
         JPanel subPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -249,5 +243,52 @@ public class Teil3 {
         subPanel.add(delButton);
 
         return subPanel;
+    }
+
+    private static Map<String, Map<JTextField, JTextField>> readDate() {
+        Map<String, Map<JTextField, JTextField>> entries = new HashMap<>();
+
+        try (FileReader fileReader = new FileReader("application/basic/problem")) {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            
+            /********* Funktional Interface -> Consumer *********/
+            Consumer<String> line = str -> {
+                String arr[] = str.replace("(", "").replace(")", "").trim().split(" ");
+                if (arr.length < 3) return;
+                if (entries.get(arr[0]) == null) 
+                    entries.put(arr[0], new HashMap<>());
+                entries.get(arr[0]).put(new JTextField(arr[1]), new JTextField(arr[2]));
+            };
+            
+            /********* Main Stream that goes over the data *********/
+            bufferedReader.lines().forEach(line::accept);
+        } catch (Exception e) { System.out.println(e); }
+
+        return entries;
+    }
+
+
+    private static void writeData(Map<String, Map<JTextField, JTextField>> entries)  {
+        try (FileWriter fileWriter = new FileWriter("application/basic/test.txt")) {
+
+            Function<Map.Entry<JTextField, JTextField>, String> line = str -> {
+                return " " + str.getKey().getText() + " " + str.getValue().getText() + ")";
+            };
+
+            Function<Map.Entry<String, Map<JTextField, JTextField>>, String> format = str -> {
+                return str.getValue().entrySet().stream().map(line::apply)
+                    .map(("\t\t(" + str.getKey())::concat).collect(Collectors.joining("\n"));
+            };
+
+            Consumer<String> write = curLine -> {
+                try { fileWriter.write("\n\n" + curLine);
+                } catch (IOException e) { System.out.println(e.getMessage()); }
+            };
+
+
+            fileWriter.write("(defproblem problem basic\n\t(");
+            entries.entrySet().stream().map(format::apply).forEach(write::accept);
+            fileWriter.write("\t)\n\t(\n\t)\n)");
+        } catch (Exception e) { System.out.println(e.getMessage()); }
     }
 }
