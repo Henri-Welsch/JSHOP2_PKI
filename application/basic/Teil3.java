@@ -250,7 +250,7 @@ public class Teil3 {
 
         try (FileReader fileReader = new FileReader("application/basic/problem")) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
-            
+
             /********* Funktional Interface -> Consumer *********/
             Consumer<String> line = str -> {
                 String arr[] = str.replace("(", "").replace(")", "").trim().split(" ");
@@ -259,7 +259,7 @@ public class Teil3 {
                     entries.put(arr[0], new HashMap<>());
                 entries.get(arr[0]).put(new JTextField(arr[1]), new JTextField(arr[2]));
             };
-            
+
             /********* Main Stream that goes over the data *********/
             bufferedReader.lines().forEach(line::accept);
         } catch (Exception e) { System.out.println(e); }
