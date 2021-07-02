@@ -15,7 +15,7 @@ public class Teil3 {
         JFrame frame = new JFrame("Eingabe");
         
 
-        frame.setSize(350, 285);
+        frame.setSize(350, 265);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel panel = new JPanel();    
@@ -44,14 +44,12 @@ public class Teil3 {
             getManager(entries.get("PARCEL-AT"), "PARCEL-AT");
             System.out.println("Open lieferaufträge manager");
         });
-        // TODO noch nicht klar -> Lese Aufgabenstellung
         // * Ende Lieferaufträge
 
 
 
         // * Start Stand des Kilometerzählers 
-        JLabel truck_Label = new JLabel("Anzahl Trucks " + entries.get("TRUCK").size());
-        // TODO counter not working
+        JLabel truck_Label = new JLabel("Einträge - Trucks: ");
         truck_Label.setBounds(10,70,150,25);
         panel.add(truck_Label);
 
@@ -68,8 +66,7 @@ public class Teil3 {
 
 
         // * Start Stand des Stundenkontos. 
-        JLabel driver_Label = new JLabel("Anzahl Fahrer " + entries.get("TRUCK-LICENSE").size());
-        // TODO counter not working
+        JLabel driver_Label = new JLabel("Einträge - Fahrer: ");
         driver_Label.setBounds(10,100,150,25);
         panel.add(driver_Label);
 
@@ -86,8 +83,7 @@ public class Teil3 {
 
 
         // * Start Hallen
-        JLabel hall_Label = new JLabel("Anzahl Hallen " + entries.get("IN-CITY").size());
-        // TODO counter not working
+        JLabel hall_Label = new JLabel("Einträge - Hallen: ");
         hall_Label.setBounds(10,130,150,25);
         panel.add(hall_Label);
 
@@ -113,35 +109,19 @@ public class Teil3 {
         });
 
 
-        JButton cancel_Button = new JButton("Verwerfen");
-        cancel_Button.setBounds(170, 185, 150, 25);
-        panel.add(cancel_Button);
-
-        cancel_Button.addActionListener(e -> {
-            System.out.println("Verwerfen");
-            // TODO Verwerfen der Änderungen 
-        });
-
         // * Start Input Button
         JButton start_Button = new JButton("Ausführen");
-        start_Button.setBounds(10, 215, 150, 25);
+        start_Button.setBounds(170, 185, 150, 25);
         panel.add(start_Button);
 
         start_Button.addActionListener(e -> {
             System.out.println("Ausführen");
-            // TODO Aufrufen von Basic
+            try {
+               Runtime.getRuntime().exec(new String[] {"cmd", "/K", "make run basic problem"});
+            } catch (Exception a) { 
+                System.out.println(a.getMessage()); 
+            }
         });
-
-
-        JButton stop_Button = new JButton("Abbrechen");
-        stop_Button.setBounds(170, 215, 150, 25);
-        panel.add(stop_Button);
-
-        stop_Button.addActionListener(e -> {
-            System.out.println("Abbrechen");
-            // TODO Abbrechen von Basic
-        });
-        // * Ende Input Button
     }
 
 
@@ -209,7 +189,7 @@ public class Teil3 {
         newFrame.add(topPanel, BorderLayout.NORTH);
         newFrame.add(scrollPane, BorderLayout.CENTER);
 
-        newFrame.setSize(350, 285);
+        newFrame.setSize(350, 265);
         newFrame.setVisible(true);
     }
 
@@ -233,13 +213,13 @@ public class Teil3 {
 
         JTextField entryValue = (value == null)? new JTextField() : value;
         entryValue.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        entryValue.setPreferredSize(new Dimension(100, 20));
+        entryValue.setPreferredSize(new Dimension(90, 20));
         subPanel.add(entryValue);
 
         subPanel.add(Box.createRigidArea(new Dimension(5, 0)));
 
         JButton delButton = new JButton("Löschen");
-        delButton.setPreferredSize(new Dimension(95, 20));
+        delButton.setPreferredSize(new Dimension(85, 20));
         subPanel.add(delButton);
 
         return subPanel;
@@ -261,7 +241,7 @@ public class Teil3 {
             };
 
             /********* Main Stream that goes over the data *********/
-            bufferedReader.lines().forEach(line::accept);
+            bufferedReader.lines().skip(2).forEach(line::accept);
         } catch (Exception e) { System.out.println(e); }
 
         return entries;
@@ -283,12 +263,17 @@ public class Teil3 {
             Consumer<String> write = curLine -> {
                 try { fileWriter.write("\n\n" + curLine);
                 } catch (IOException e) { System.out.println(e.getMessage()); }
-            };
+            };            
 
 
             fileWriter.write("(defproblem problem basic\n\t(");
-            entries.entrySet().stream().map(format::apply).forEach(write::accept);
-            fileWriter.write("\t)\n\t(\n\t)\n)");
+            entries.entrySet().stream().filter(str -> !str.getKey().contains("PARCEL-AT"))
+            .map(format::apply).forEach(write::accept);
+            fileWriter.write("\n\t)\n\t(");
+
+            entries.entrySet().stream().filter(str -> str.getKey().contains("PARCEL-AT"))
+                .map(format::apply).forEach(write::accept);
+            fileWriter.write("\n\t)\n)");
         } catch (Exception e) { System.out.println(e.getMessage()); }
     }
 }
