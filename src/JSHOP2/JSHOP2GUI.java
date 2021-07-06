@@ -2,6 +2,10 @@ package JSHOP2;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.nio.Buffer;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -1024,6 +1028,7 @@ public class JSHOP2GUI extends JFrame {
                 msg += plan.get(i);
                 msg += "\n";
             }
+            final String outputMsg = msg;
             
             // Creating the text area that will display the plan            
             TextArea textBox = new TextArea( msg, 24, 63 );
@@ -1036,10 +1041,37 @@ public class JSHOP2GUI extends JFrame {
                     dispose();
                 }
             });
+
+            // -------------------------- modification during exercise 3---
+            // creating the "Save" button
+            JButton saveButton = new JButton("  Save  ");
+            saveButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JFrame jFrame = new JFrame();
+                    setVisible(true);
+
+                    JFileChooser jFileChooser = new JFileChooser();
+                    jFileChooser.setDialogTitle("Specify save location");
+                    jFileChooser.showSaveDialog(jFrame);
+
+                    File file = jFileChooser.getSelectedFile();
+                    try{
+                        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file.getAbsolutePath()));
+                        bufferedWriter.write(outputMsg);
+                        bufferedWriter.close();
+                    }catch (Exception exception){
+                        System.out.println(exception.getStackTrace());
+                    }
+                }
+            });
+            // ------------------------------------------------------------
             
             // Adding components to the dialog box          
             getContentPane().add( textBox );
             getContentPane().add( closeButton );
+
+            getContentPane().add(saveButton);  // changed during exercise 3
            
             
             setSize( new Dimension(500,500) );
