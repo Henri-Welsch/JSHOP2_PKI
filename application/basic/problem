@@ -34,9 +34,6 @@
 	(TRUCK-LICENSE schmitz 65)
 	(TRUCK-LICENSE meyer 66.5)
 	
-	(PARCEL-LOADED parcel1 truck1)
-	(PARCEL-LOADED parcel2 truck1)
-	
 	(KFZ-MECHANIC fischer null)
   )
 
@@ -48,7 +45,7 @@
 	(PARCEL-AT parcel4 warehouse2)
 	(PARCEL-AT parcel5 warehouse2)
 	(PARCEL-AT parcel6 warehouse4)
-	;(PARCEL-AT parcel7 warehouse3)
-	;(PARCEL-AT parcel8 warehouse4)
+	(PARCEL-AT parcel7 warehouse3)
+	(PARCEL-AT parcel8 warehouse4)
   )
 )
