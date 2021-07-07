@@ -1028,7 +1028,7 @@ public class JSHOP2GUI extends JFrame {
                 msg += plan.get(i);
                 msg += "\n";
             }
-            final String outputMsg = msg;
+            final String outputMsg = msg; //#region [ rgba(255, 255, 0, 0.12) ] //#endregion
             
             // Creating the text area that will display the plan            
             TextArea textBox = new TextArea( msg, 24, 63 );
@@ -1042,7 +1042,7 @@ public class JSHOP2GUI extends JFrame {
                 }
             });
 
-            // -------------------------- modification during exercise 3---
+            // -------------------------- modification during exercise 3---       #region [ rgba(255, 255, 0, 0.12) ]
             // creating the "Save" button
             JButton saveButton = new JButton("  Save  ");
             saveButton.addActionListener(new ActionListener() {
@@ -1065,13 +1065,13 @@ public class JSHOP2GUI extends JFrame {
                     }
                 }
             });
-            // ------------------------------------------------------------
+            // ------------------------------------------------------------             #endregion
             
             // Adding components to the dialog box          
             getContentPane().add( textBox );
             getContentPane().add( closeButton );
 
-            getContentPane().add(saveButton);  // changed during exercise 3
+            getContentPane().add(saveButton);  // changed during exercise 3  #region [ rgba(255, 255, 0, 0.12) ] #endregion
            
             
             setSize( new Dimension(500,500) );
@@ -1199,7 +1199,6 @@ public class JSHOP2GUI extends JFrame {
                         tree.setSelectionPath(new TreePath(treeNode.getPath())); // selects the node
                         tree.scrollPathToVisible(new TreePath(treeNode.getPath())); // makes the node visible
                     }
-                
                 }
             });
             innerPanel_3.add( prevButton );            

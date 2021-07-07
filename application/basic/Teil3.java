@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 
 public class Teil3 {
+    static String dist = "";
     public static void main(String[] args) {    
         JFrame frame = new JFrame("Eingabe");
         
@@ -30,8 +31,7 @@ public class Teil3 {
         Map<String, Map<JTextField, JTextField>> entries = readDate();
         panel.setLayout(null);
 
-        
-        //* Start Lieferaufträge
+
         JLabel deliveryOrder_Label = new JLabel("Aktuelle Lieferaufträge:");
         deliveryOrder_Label.setBounds(10,20,150,25);
         panel.add(deliveryOrder_Label);
@@ -44,11 +44,8 @@ public class Teil3 {
             getManager(entries.get("PARCEL-AT"), "PARCEL-AT");
             System.out.println("Open lieferaufträge manager");
         });
-        // * Ende Lieferaufträge
 
 
-
-        // * Start Stand des Kilometerzählers 
         JLabel truck_Label = new JLabel("Einträge - Trucks: ");
         truck_Label.setBounds(10,70,150,25);
         panel.add(truck_Label);
@@ -62,10 +59,8 @@ public class Teil3 {
             System.out.println("Open truck manager");
 
         });
-        // * Ende Stand des Kilometerzählers 
 
-
-        // * Start Stand des Stundenkontos. 
+        
         JLabel driver_Label = new JLabel("Einträge - Fahrer: ");
         driver_Label.setBounds(10,100,150,25);
         panel.add(driver_Label);
@@ -79,10 +74,8 @@ public class Teil3 {
             System.out.println("Open driver manager");
 
         });
-        // * Ende Stand des Stundenkontos. 
 
 
-        // * Start Hallen
         JLabel hall_Label = new JLabel("Einträge - Hallen: ");
         hall_Label.setBounds(10,130,150,25);
         panel.add(hall_Label);
@@ -95,10 +88,8 @@ public class Teil3 {
             getManager(entries.get("IN-CITY"), "IN-CITY");
             System.out.println("Open hall manager");
         });
-        // * Ende Hallen 
 
 
-        // * Start Input Button
         JButton save_Button = new JButton("Speichern");
         save_Button.setBounds(10, 185, 150, 25);
         panel.add(save_Button);
@@ -109,7 +100,6 @@ public class Teil3 {
         });
 
 
-        // * Start Input Button
         JButton start_Button = new JButton("Ausführen");
         start_Button.setBounds(170, 185, 150, 25);
         panel.add(start_Button);
@@ -233,6 +223,7 @@ public class Teil3 {
 
             /********* Funktional Interface -> Consumer *********/
             Consumer<String> line = str -> {
+                if (str.contains("DISTANCE")) { dist +=  "\n\t" + str; return; };
                 String arr[] = str.replace("(", "").replace(")", "").trim().split(" ");
                 if (arr.length < 3) return;
                 if (entries.get(arr[0]) == null) 
@@ -241,7 +232,7 @@ public class Teil3 {
             };
 
             /********* Main Stream that goes over the data *********/
-            bufferedReader.lines().skip(2).forEach(line::accept);
+            bufferedReader.lines().skip(1).forEach(line::accept);
         } catch (Exception e) { System.out.println(e); }
 
         return entries;
@@ -249,7 +240,7 @@ public class Teil3 {
 
 
     private static void writeData(Map<String, Map<JTextField, JTextField>> entries)  {
-        try (FileWriter fileWriter = new FileWriter("application/basic/test.txt")) {
+        try (FileWriter fileWriter = new FileWriter("application/basic/problem")) {
 
             Function<Map.Entry<JTextField, JTextField>, String> line = str -> {
                 return " " + str.getKey().getText() + " " + str.getValue().getText() + ")";
@@ -267,6 +258,7 @@ public class Teil3 {
 
 
             fileWriter.write("(defproblem problem basic\n\t(");
+            fileWriter.write(dist);
             entries.entrySet().stream().filter(str -> !str.getKey().contains("PARCEL-AT"))
             .map(format::apply).forEach(write::accept);
             fileWriter.write("\n\t)\n\t(");
