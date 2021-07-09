@@ -5,16 +5,16 @@
 	
 	; ---------------------------------------SELECT DRIVER------------------------------------------------------------------
 	
-	(:operator 	(!choose-driver) ; head
-				((TRUCK-LICENSE ?staff ?hours) (call >= ?hours 1) (forall (?staff2 ?hours2) ((TRUCK-LICENSE ?staff2 ?hours2)) ((call >= ?hours ?hours2)))) ; precond
+	(:operator 	(!choose-driver ?current-location) ; head
+				((TRUCK-LICENSE ?staff ?hours) (STAFF-AT ?staff ?current-location) (call >= ?hours 1) (forall (?staff2 ?hours2) ((STAFF-AT ?staff2 ?current-location)(TRUCK-LICENSE ?staff2 ?hours2)) ((call >= ?hours ?hours2)))) ; precond
 				() ; delete
 				((CHOSEN-DRIVER ?staff)) ; add
 	)
 	
 	; ---------------------------------------SELECT TRUCK-------------------------------------------------------------------
 	
-	(:operator 	(!choose-truck) ; head
-				((TRUCK ?truck ?mileage) (forall (?truck2 ?mileage2) ((TRUCK ?truck2 ?mileage2)) ((call <= ?mileage ?mileage2)))) ; precond
+	(:operator 	(!choose-truck ?current-location) ; head
+				((TRUCK ?truck ?mileage) (TRUCK-AT ?truck ?current-location) (forall (?truck2 ?mileage2) ((TRUCK ?truck2 ?mileage2) (TRUCK-AT ?truck2 ?current-location)) ((call <= ?mileage ?mileage2)))) ; precond
 				() ; delete
 				((chosen-truck ?truck)) ; add
 	)
@@ -207,8 +207,8 @@
 		
 		; subtasks
 		(
-		(!choose-driver)
-		(!choose-truck)
+		(!choose-driver ?current-location)
+		(!choose-truck ?current-location)
 		
 		(deliver-to ?parcel ?current-location ?location)
 		(inspection-needed?)
